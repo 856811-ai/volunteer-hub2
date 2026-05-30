@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VolunteerLink Pro - Advanced Workforce Portal</title>
+    <style>
+        :root {
+            --orange-50: #fff7ed;
+            --orange-100: #ffedd5;
+            --orange-500: #f97316;
+            --orange-600: #ea580c;
+            --orange-700: #c2410c;
+            --neutral-900: #0f172a;
+            --neutral-800: #1e293b;
+            --neutral-700: #334155;
+            --neutral-500: #64748b;
+            --neutral-200: #e2e8f0;
+            --neutral-100: #f1f5f9;
+            --neutral-50: #f8fafc;
+            
+            --success-500: #22c55e;
+            --success-50: #f0fdf4;
+            
+            --border-hover: 2px solid var(--neutral-900);
+            --border-clean: 2px solid transparent;
+            --border-static: 1px solid var(--neutral-200);
+            --radius-xl: 16px;
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --radius-sm: 4px;
+            
+            --shadow-premium: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --shadow-flat: 4px 4px 0px var(--neutral-900);
+            
+            --transition-bounce: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--neutral-50);
+            color: var(--neutral-900);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- MICROS-INTERACTIONS: DYNAMIC HOVER BORDERS --- */
+        button {
+            border: var(--border-clean) !important;
+            cursor: pointer;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: var(--transition-bounce);
+            box-shadow: var(--shadow-premium);
+        }
+
+        button:hover {
+            border: var(--border-hover) !important;
+            transform: translate(-2px, -2px);
+            box-shadow: var(--shadow-flat);
+        }
+
+        button:active {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0px var(--neutral-900);
+        }
+
+        input, select {
+            border: var(--border-static);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            font-size: 14px;
+            background: #ffffff;
+            color: var(--neutral-900);
+            width: 100%;
+            transition: var(--transition-smooth);
+        }
+
+        input:hover, select:hover {
+            border: var(--border-hover);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border: var(--border-hover);
+            box-shadow: 4px 4px 0px var(--orange-500);
+        }
+
+        label {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--neutral-500);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* --- ONBOARDING SYSTEM --- */
+        .auth-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--orange-50);
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            z-index: 2000;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .auth-promo-panel {
+            background-color: var(--orange-500);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 60px;
+        }
+
+        .auth-brand {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--neutral-900);
+        }
+
+        .auth-promo-text h2 {
+            font-size: 42px;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 16px;
+        }
+
+        .auth-form-panel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background: #ffffff;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 440px;
+            animation: authEntrance 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+        }
+
+        @keyframes authEntrance {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .auth-card-title {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 6px;
+        }
+
+        /* --- APPLICATION CONTAINER --- */
+        .app-container {
+            display: none;
+            opacity: 0;
+            transition: all 0.5s ease;
+            min-height: 100vh;
+        }
+
+        .app-container.active-system {
+            display: block;
+            opacity: 1;
+        }
+
+        nav {
+            background-color: #ffffff;
+            border-bottom: var(--border-static);
+            padding: 16px 40px;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 40px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--neutral-900);
+        }
+
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            justify-self: center;
+        }
+
+        .search-bar-input {
+            padding-left: 40px;
+            height: 42px;
+            border-radius: var(--radius-lg);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--neutral-500);
+            pointer-events: none;
+        }
+
+        .user-pill {
+            background: var(--neutral-100);
+            padding: 8px 16px;
+            border-radius: var(--radius-lg);
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        /* Application Grid System */
+        .app-grid {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            max-width: 1600px;
+            margin: 0 auto;
+            gap: 32px;
+            padding: 32px;
+        }
+
+        .sidebar-drawer {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        .sidebar-card {
+            background: #ffffff;
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            box-shadow: var(--shadow-premium);
+            border: var(--border-static);
+        }
+
+        .section-tag {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            color: var(--orange-700);
+            background: var(--orange-100);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            display: inline-block;
+            margin-bottom: 16px;
+        }
+
+        /* --- REPORTING MODULE --- */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .mini-report-card {
+            background: var(--neutral-50);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            text-align: center;
+            border: var(--border-static);
+        }
+
+        .mini-report-val {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--orange-600);
+        }
+
+        .ledger-box {
+            background: var(--orange-50);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+        }
+
+        .stat-counter {
+            font-size: 42px;
+            font-weight: 900;
+            margin: 8px 0;
+        }
+
+        .progress-track {
+            background: #ffffff;
+            height: 16px;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 12px;
+            border: var(--border-static);
+        }
+
+        .progress-thumb {
+            height: 100%;
+            background: var(--orange-500);
+            width: 0%;
+            transition: width 0.8s ease;
+        }
+
+        /* --- WORKSPACE CORE CONTROLS --- */
+        .workspace-area {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .tab-menu {
+            display: flex;
+            gap: 12px;
+            border-bottom: var(--border-static);
+        }
+
+        .tab-trigger {
+            background: #ffffff;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: var(--radius-md) var(--radius-md) 0 0;
+            border: var(--border-static);
+            border-bottom: none !important;
+        }
+
+        .tab-trigger:hover {
+            border: var(--border-hover) !important;
+            border-bottom: none !important;
+        }
+
+        .tab-trigger.active-tab {
+            background: var(--orange-500);
+            color: #ffffff;
+            border: var(--border-clean) !important;
+            border-bottom: none !important;
+        }
+
+        /* Advanced Multidimensional Filter Matrix Header */
+        .filter-ribbon-group {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: var(--radius-xl);
+            border: var(--border-static);
+            box-shadow: var(--shadow-premium);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-row-label {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            width: 90px;
+            color: var(--neutral-500);
+        }
+
+        .filter-pill {
+            background: var(--neutral-50);
+            padding: 6px 14px;
+            border-radius: var(--radius-md);
+            font-size: 12px;
+            font-weight: 700;
+            border: var(--border-clean) !important;
+        }
+
+        .filter-pill:hover {
+            border: var(--border-hover) !important;
+        }
+
+        .filter-pill.active-pill {
+            background: var(--neutral-900);
+            color: #ffffff;
+        }
+
+        /* --- OPPORTUNITY CARD STRUCTURE --- */
+        .cards-deck {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+            gap: 24px;
+        }
+
+        .job-card {
+            border-radius: var(--radius-xl);
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            border: var(--border-static);
+            box-shadow: var(--shadow-premium);
+            transition: var(--transition-bounce);
+        }
+
+        /* Hover Border Applied Exclusively Here */
+        .job-card:hover {
+            border: var(--border-hover);
+            transform: translateY(-4px) translateX(-2px);
+            box-shadow: var(--shadow-flat);
+        }
+
+        .job-card-header {
+            padding: 20px 20px 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .category-tag {
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--orange-100);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .hours-tag {
+            font-size: 11px;
+            font-weight: 800;
+            background: var(--orange-500);
+            color: white;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .job-card-body {
+            padding: 0 20px 16px 20px;
+            flex-grow: 1;
+        }
+
+        .job-card-body h3 {
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .job-card-body p {
+            font-size: 13px;
+            color: var(--neutral-500);
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        /* Vector Metadata Badge Row */
+        .metadata-pill-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .meta-badge {
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            text-transform: uppercase;
+        }
+        .meta-badge.diff-beginner { background: #dcfce7; color: #166534; }
+        .meta-badge.diff-intermediate { background: #fef9c3; color: #854d0e; }
+        .meta-badge.diff-advanced { background: #fee2e2; color: #991b1b; }
+        .meta-badge.time-pill { background: var(--neutral-100); color: var(--neutral-700); }
+
+        .job-card-footer {
+            padding: 16px 20px;
+            background: var(--orange-50);
+            border-top: var(--border-static);
+        }
+
+        .btn-card-trigger {
+            width: 100%;
+            padding: 10px;
+            font-size: 12px;
+            border-radius: var(--radius-md);
+        }
+
+        .btn-card-register { background-color: #ffffff; color: var(--neutral-900); }
+        .btn-card-complete { background-color: var(--orange-500); color: white; }
+
+        .status-badge-pill {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 10px;
+            text-transform: uppercase;
+            border-radius: var(--radius-sm);
+        }
+        .status-badge-pill.pending { background: #fef08a; color: #854d0e; }
+        .status-badge-pill.done { background: #bbf7d0; color: #166534; }
+
+        .toast-system {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--neutral-900);
+            color: white;
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            max-width: 350px;
+            z-index: 3000;
+            font-size: 13px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition-bounce);
+        }
+
+        .toast-system.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background-color: var(--orange-500);
+            color: #ffffff;
+            padding: 12px 20px;
+            font-size: 14px;
+            border-radius: var(--radius-md);
+            width: 100%;
+        }
+
+        @media (max-width: 992px) {
+            .auth-screen { grid-template-columns: 1fr; }
+            .auth-promo-panel { display: none; }
+            .app-grid { grid-template-columns: 1fr; padding: 16px; }
+            nav { grid-template-columns: 1fr auto; gap: 16px; padding: 16px; }
+            .search-container { grid-column: 1 / -1; order: 3; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-screen" id="authScreen">
+        <div class="auth-promo-panel">
+            <div class="auth-brand">VOLUNTEERLINK</div>
+            <div class="auth-promo-text">
+                <h2>Empowering Student Action Channels</h2>
+                <p>Track secondary school milestones and filter positions based on interest vectors and time commitments.</p>
+            </div>
+            <div style="font-size: 12px; font-weight: 700; opacity: 0.6;">ENTERPRISE PORTAL INTERFACE // 2026</div>
+        </div>
+        <div class="auth-form-panel">
+            <div class="auth-card">
+                <div class="auth-card-title">Create Profile Workspace</div>
+                <p style="color: var(--neutral-500); font-size: 14px; margin-bottom: 24px;">Complete your registration setup to customize interest matching indexes.</p>
+                
+                <form onsubmit="event.preventDefault(); triggerAuthInitialization();" style="display: flex; flex-direction: column; gap: 18px;">
+                    <div class="form-group">
+                        <label for="regName">Legal Profile Name</label>
+                        <input type="text" id="regName" placeholder="Alex Mercer" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="regGoal">Target Credit Hour Goal</label>
+                        <input type="number" id="regGoal" value="40" min="1" required>
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 8px;">
+                        Initialize Dashboard System →
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container" id="appWorkspace">
+        <nav>
+            <div class="nav-logo">VOLUNTEER<strong>LINK</strong></div>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="globalSearchInput" class="search-bar-input" placeholder="Search operations by keyword index titles..." oninput="handleGlobalSearch()">
+            </div>
+            <div class="user-pill" id="navUserBadge">User Session</div>
+        </nav>
+
+        <div class="app-grid">
+            <aside class="sidebar-drawer">
+                <div class="sidebar-card">
+                    <span class="section-tag">Account Details</span>
+                    <form onsubmit="event.preventDefault(); processAccountModifications();" style="display: flex; flex-direction: column; gap: 14px;">
+                        <div class="form-group">
+                            <label for="studentName">Student Legal Identity</label>
+                            <input type="text" id="studentName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="targetHours">Target System Goal</label>
+                            <input type="number" id="targetHours" min="1" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Update Profile Settings</button>
+                    </form>
+                </div>
+
+                <div class="sidebar-card">
+                    <span class="section-tag">Live Analytics Tracking</span>
+                    <div class="analytics-grid">
+                        <div class="mini-report-card">
+                            <div class="mini-report-val" id="analyticsAssigned">0</div>
+                            <div style="font-size: 10px; font-weight:700; color:var(--neutral-500); text-transform:uppercase;">Holds</div>
+                        </div>
+                        <div class="mini-report-card">
+                            <div class="mini-report-val" id="analyticsRate">0%</div>
+                            <div style="font-size: 10px; font-weight:700; color:var(--neutral-500); text-transform:uppercase;">Success</div>
+                        </div>
+                    </div>
+
+                    <div class="ledger-box">
+                        <label style="color: var(--neutral-500); font-size: 11px;">Hours Performance Matrix</label>
+                        <div class="stat-counter"><span id="currentHours">0</span><span style="font-size:20px; color:var(--neutral-500);"> / <span id="goalHours">40</span></span></div>
+                        <div class="progress-track"><div class="progress-thumb" id="progressFill"></div></div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="workspace-area">
+                <div class="tab-menu">
+                    <button class="tab-trigger active-tab" onclick="toggleWorkspaceTabs('available', this)">Available Operations</button>
+                    <button class="tab-trigger" onclick="toggleWorkspaceTabs('registrations', this)">Tracked Shifts Slots (<span id="regCount">0</span>)</button>
+                </div>
+
+                <div id="panelAvailable" class="panel-view active-view" style="display: flex; flex-direction: column; gap: 24px;">
+                    <div class="filter-ribbon-group">
+                        <div class="filter-row">
+                            <div class="filter-row-label">Interests</div>
+                            <button class="filter-pill active-pill" data-type="category" onclick="executeFilterSelection('category', 'all', this)">All Interests</button>
+                            <button class="filter-pill" data-type="category" onclick="executeFilterSelection('category', 'Environment', this)">Environment</button>
+                            <button class="filter-pill" data-type="category" onclick="executeFilterSelection('category', 'Recreation', this)">Recreation</button>
+                            <button class="filter-pill" data-type="category" onclick="executeFilterSelection('category', 'Community', this)">Community</button>
+                            <button class="filter-pill" data-type="category" onclick="executeFilterSelection('category', 'Healthcare', this)">Healthcare</button>
+                        </div>
+                        <div class="filter-row">
+                            <div class="filter-row-label">Difficulty</div>
+                            <button class="filter-pill active-pill" data-type="difficulty" onclick="executeFilterSelection('difficulty', 'all', this)">All Levels</button>
+                            <button class="filter-pill" data-type="difficulty" onclick="executeFilterSelection('difficulty', 'Beginner', this)">Beginner</button>
+                            <button class="filter-pill" data-type="difficulty" onclick="executeFilterSelection('difficulty', 'Intermediate', this)">Intermediate</button>
+                            <button class="filter-pill" data-type="difficulty" onclick="executeFilterSelection('difficulty', 'Advanced', this)">Advanced</button>
+                        </div>
+                        <div class="filter-row">
+                            <div class="filter-row-label">Commitment</div>
+                            <button class="filter-pill active-pill" data-type="commitment" onclick="executeFilterSelection('commitment', 'all', this)">All Timeline Modes</button>
+                            <button class="filter-pill" data-type="commitment" onclick="executeFilterSelection('commitment', 'Short-term', this)">Short-term</button>
+                            <button class="filter-pill" data-type="commitment" onclick="executeFilterSelection('commitment', 'Medium-term', this)">Medium-term</button>
+                            <button class="filter-pill" data-type="commitment" onclick="executeFilterSelection('commitment', 'Long-term', this)">Long-term</button>
+                        </div>
+                    </div>
+
+                    <div class="cards-deck" id="availableContainer"></div>
+                </div>
+               
+                <div id="panelRegistrations" class="panel-view">
+                    <div class="cards-deck" id="registrationsContainer"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div class="toast-system" id="reminderAlert">
+        <div style="font-weight: 900; color: var(--orange-500); font-size: 11px; text-transform: uppercase; margin-bottom: 2px;">📡 Dispatch Event</div>
+        <div id="reminderMessage"></div>
+    </div>
+
+    <script>
+        const appState = {
+            studentName: "",
+            targetHours: 40,
+            completedHours: 0,
+            filters: {
+                category: "all",
+                difficulty: "all",
+                commitment: "all"
+            },
+            searchQuery: ""
+        };
+
+        const realBramptonDatabase = [
+            { id: 1, title: "Conservation Trail & Grounds Maintenance", category: "Environment", difficulty: "Beginner", commitment: "Short-term", location: "Chinguacousy Park", hours: 4, description: "Assist environmental staff in sorting recycling drop-offs and cleanup operations along primary trail loops." },
+            { id: 2, title: "Youth Community Sports Coordination Aide", category: "Recreation", difficulty: "Intermediate", commitment: "Medium-term", location: "Gore Meadows Community Centre", hours:9, description: "Help setup equipment and monitor active scoring infrastructure for regional youth basketball brackets." },
+            { id: 3, title: "Afterschool Peer Tutoring & Reading Mentor", category: "Community", difficulty: "Intermediate", commitment: "Long-term", location: "Brampton Library - Mount Pleasant", hours:12, description: "Provide direct study circle support to primary grade school students struggling with math homework cycles." },
+            { id: 4, title: "Food Sortation & Inventory Allocation", category: "Community", difficulty: "Beginner", commitment: "Short-term", location: "Regeneration Outreach Centre", hours: 6, description: "Sort incoming regional food drives and stock essential nutritional hampers for local distribution pathways." },
+            { id: 5, title: "Aquatic Event Assistant & Equipment Supervisor", category: "Recreation", difficulty: "Advanced", commitment: "Short-term", location: "Cassie Campbell Community Centre", hours: 4, description: "Support local swim event check-ins, handout logs, and maintain deck perimeter logistics require specialized supervision safely." },
+            { id: 6, title: "Tech Literacy Circle Support Leader", category: "Community", difficulty: "Beginner", commitment: "Medium-term", location: "Brampton Library - Springdale", hours: 3, description: "Guide senior citizens through local library app access steps, email setups, and essential desktop navigation safety." },
+            { id: 7, title: "Civic Health Operations Logistics Assistant", category: "Healthcare", difficulty: "Advanced", commitment: "Long-term", location: "Brampton Civic Hospital Node", hours: 8, description: "Aid outpatient administrative queues and track clinic data flow sheets inside check-in systems under medical management protocols." }
+            , { id: 1, title: "Conservation Trail & Grounds Maintenance", category: "Environment", location: "Chinguacousy Park, 9050 Bramalea Rd, Brampton", hours: 4, description: "Assist environmental staff in sorting recycling drop-offs and cleanup operations along primary trail loops." },
+            { id: 2, title: "Youth Community Sports Coordination Aide", category: "Recreation", location: "Gore Meadows Community Centre, 10150 The Gore Rd, Brampton", hours: 5, description: "Help setup equipment and monitor active scoring infrastructure for regional youth basketball brackets." },
+            { id: 3, title: "Afterschool Peer Tutoring & Reading Mentor", category: "Community", location: "Brampton Library - Mount Pleasant Village Branch, 100 Commuter Dr, Brampton", hours: 3, description: "Provide direct study circle support to primary grade school students struggling with math homework cycles." },
+            { id: 4, title: "Food Sortation & Inventory Allocation", category: "Community", location: "Regeneration Outreach Community, 156 Main St N, Brampton", hours: 6, description: "Sort incoming regional food drives and stock essential nutritional hampers for local distribution pathways." },
+            { id: 5, title: "Aquatic Event Assistant & Equipment Supervisor", category: "Recreation", location: "Cassie Campbell Community Centre, 1050 Sandalwood Pkwy W, Brampton", hours: 4, description: "Support local swim event check-ins, handout logs, and maintain deck perimeter logistics." },
+            { id: 6, title: "Tech Literacy Circle Support Leader", category: "Community", location: "Brampton Library - Springdale Branch, 10705 Bramalea Rd, Brampton", hours: 3, description: "Guide senior citizens through local library app access steps, email setups, and essential desktop navigation safety." },
+            { id: 7, title: "Brampton Civic Hospital", category: "Healthcare", location: " 2100 Bovaird Dr E, Brampton, ON L6R 3J7", hours: 10, description: "Assist healthcare staff in various administrative and support roles." },
+            { id: 8, title: "Grocery Delivery Support for Seniors", category: "Grocery", location: "Multiple locations across Brampton", hours: 4, description: "Help deliver groceries to senior citizens who are unable to leave their homes." },
+            { id: 9, title: "Educational Workshop Assistant at Peel District School Board", category: "Education", location: "Brampton Civic Centre, 150 Central Park Dr, Brampton", hours: 5, description: "Support educational workshops and events organized by the Peel District School Board." },
+            { id: 10, title: "Brampton Food Bank Volunteer", category: "Community", location: "169 Main St N, Brampton", hours: 6, description: "Assist in sorting and distributing food donations at the Brampton Food Bank." },
+            {id: 11, title: "Brampton Parks Cleanup Crew", category: "Environment", location: "Heart Lake Conservation Area, 10818 Heart Lake Rd, Brampton", hours: 4, description: "Join the cleanup crew to help maintain the beauty of Brampton's parks and natural areas." },
+            { id: 12, title: "Community Event Setup at Brampton City Hall", category: "Community", location: "2 Wellington St W, Brampton", hours: 3, description: "Assist in setting up for community events and gatherings at Brampton City Hall." },
+            {id:13, title: "Brampton Animal Shelter Volunteer", category: "Community", location: "20350 Heart Lake Rd, Brampton", hours: 5, description: "Help care for animals at the Brampton Animal Shelter, including feeding, cleaning, and socializing with the animals." },
+            { id: 14, title: "Brampton Public Library Book Sorting", category: "Education", location: "Brampton Library - South Fletchers Branch, 65 Queen St S, Brampton", hours: 3, description: "Assist in sorting and organizing books at the Brampton Public Library." },
+            { id: 15, title: "Pharmacy", category: "Healthcare", location: "Brampton Pharmacy, 150 Dwyer Dr, Brampton", hours: 4, description: "Help maintain the community garden by planting, weeding, and watering the plants." },
+            {id: 16, title: "Brampton Community Garden Volunteer", category: "Environment", location: "Brampton Community Garden, 50 Main St S, Brampton", hours: 4, description: "Help maintain the community garden by planting, weeding, and watering the plants." },
+            {id: 17, title: "Brampton Senior Center Activity Assistant", category: "Community", location: "Brampton Senior Center, 129 Queen St E, Brampton", hours: 3, description: "Assist in organizing and facilitating activities for seniors at the Brampton Senior Center." },
+            {id: 18, title: "Brampton Youth Sports Coaching Assistant", category: "Recreation", location: "Brampton Soccer Centre, 1495 Sandalwood Pkwy E, Brampton", hours: 5, description: "Support youth sports coaching sessions by helping with drills, organizing equipment, and providing encouragement to young athletes." },
+            {id: 19, title: "Brampton Environmental Education Program Volunteer", category: "Environment", location: "Chinguacousy Park, 9050 Bramalea Rd, Brampton", hours: 4, description: "Assist in delivering environmental education programs to local schools and community groups at Chinguacousy Park." },
+            {id: 20, title: "Brampton Food Delivery Volunteer", category: "Grocery", location: "Multiple locations across Brampton", hours: 4, description: "Help deliver groceries to families in need through local food delivery programs in Brampton." },
+            {id: 21, title: "Brampton Public Art Installation Support", category: "Community", location: "Various locations across Brampton", hours: 3, description: "Assist in setting up and supporting public art installations and events throughout the city of Brampton." },
+            {id: 22, title: "Brampton Community Outreach Volunteer", category: "Community", location: "Brampton Civic Centre, 150 Central Park Dr, Brampton", hours: 4, description: "Support community outreach initiatives by helping to distribute information and resources to local residents." },
+            {id: 23, title: "Brampton Public Library Tech Support Volunteer", category: "Education", location: "Brampton Library - North East Branch, 70 Westwind Dr, Brampton", hours: 3, description: "Assist library patrons with basic tech support and guidance on using library resources." },
+            {id: 24, title: "Brampton Community Health Clinic Volunteer", category: "Healthcare", location: "Brampton Community Health Centre, 40 Ray Lawson Blvd, Brampton", hours:12, description: "Support the community health clinic by assisting with administrative tasks and patient support." },
+            {id: 25, title: "Brampton Youth Mentorship Program Volunteer", category: "Community", location: "Brampton Civic Centre, 150 Central Park Dr, Brampton", hours: 4, description: "Mentor local youth through the Brampton Youth Mentorship Program, providing guidance and support to help them achieve their goals." },
+            {id: 26, title: "Brampton Public Library Storytime Assistant", category: "Education", location: "Brampton Library - Mount Pleasant Village Branch, 100 Commuter Dr, Brampton", hours: 3, description: "Assist with children's storytime sessions at the Brampton Public Library, helping to engage young readers and foster a love of books." },
+            {id: 27, title: "Brampton Community Recycling Program Volunteer", category: "Environment", location: "Brampton Recycling Centre, 1290 Williams Pkwy, Brampton", hours:9, description: "Support the community recycling program by helping to sort and manage recyclable materials at the Brampton Recycling Centre." },
+            {id: 28, title: "Brampton Senior Grocery Assistance Volunteer", category: "Grocery", location: "Multiple locations across Brampton", hours: 4, description: "Assist senior citizens with grocery shopping and delivery through local assistance programs in Brampton." },
+            {id: 29, title: "Brampton Public Library Language Support Volunteer", category: "Education", location: "Brampton Library - Springdale Branch, 10705 Bramalea Rd, Brampton", hours: 3, description: "Provide language support and assistance to library patrons who are non-native English speakers." },
+            {id: 30, title: "Brampton Community Festival Volunteer", category: "Community", location: "Various locations across Brampton", hours: 5, description: "Help organize and support community festivals and events throughout the city of Brampton." },
+            {id: 31, title: "Brampton Public Library Homework Help Volunteer", category: "Education", location: "Brampton Library - South Fletchers Branch, 65 Queen St S, Brampton", hours: 3, description: "Assist students with homework and study support at the Brampton Public Library." }
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+        ];
+
+        const userRegistrations = [];
+        let alertTimeout = null;
+
+        function triggerAuthInitialization() {
+            const nameField = document.getElementById("regName").value.trim();
+            const goalField = parseInt(document.getElementById("regGoal").value, 10);
+
+            appState.studentName = nameField;
+            appState.targetHours = goalField;
+
+            document.getElementById("studentName").value = nameField;
+            document.getElementById("targetHours").value = goalField;
+            document.getElementById("navUserBadge").innerText = nameField;
+
+            calculateMetricsAndAnalytics();
+
+            const authScreen = document.getElementById("authScreen");
+            authScreen.style.opacity = "0";
+            
+            setTimeout(() => {
+                authScreen.style.display = "none";
+                document.getElementById("appWorkspace").className = "app-container active-system";
+                renderAvailableOpportunities();
+                renderRegistrations();
+                triggerTelemetryAlert(`Session workspace validated successfully.`);
+            }, 400);
+        }
+
+        function toggleWorkspaceTabs(tabTarget, tabButton) {
+            document.querySelectorAll(".tab-trigger").forEach(btn => btn.classList.remove("active-tab"));
+            document.querySelectorAll(".panel-view").forEach(panel => panel.style.display = "none");
+           
+            tabButton.classList.add("active-tab");
+            if (tabTarget === 'available') {
+                document.getElementById("panelAvailable").style.display = "flex";
+                renderAvailableOpportunities();
+            } else {
+                document.getElementById("panelRegistrations").style.display = "block";
+                renderRegistrations();
+            }
+        }
+
+        function executeFilterSelection(type, val, buttonElement) {
+            appState.filters[type] = val;
+            document.querySelectorAll(`.filter-pill[data-type="${type}"]`).forEach(btn => btn.classList.remove("active-pill"));
+            buttonElement.classList.add("active-pill");
+            renderAvailableOpportunities();
+        }
+
+        function handleGlobalSearch() {
+            appState.searchQuery = document.getElementById("globalSearchInput").value.toLowerCase();
+            renderAvailableOpportunities();
+        }
+
+        function renderAvailableOpportunities() {
+            const container = document.getElementById("availableContainer");
+            container.innerHTML = "";
+
+            let targetData = realBramptonDatabase.filter(op => !userRegistrations.some(reg => reg.id === op.id));
+
+            // Map multidimensional logical filter passes
+            if (appState.filters.category !== "all") targetData = targetData.filter(op => op.category === appState.filters.category);
+            if (appState.filters.difficulty !== "all") targetData = targetData.filter(op => op.difficulty === appState.filters.difficulty);
+            if (appState.filters.commitment !== "all") targetData = targetData.filter(op => op.commitment === appState.filters.commitment);
+
+            if (appState.searchQuery !== "") {
+                targetData = targetData.filter(op => 
+                    op.title.toLowerCase().includes(appState.searchQuery) ||
+                    op.description.toLowerCase().includes(appState.searchQuery)
+                );
+            }
+
+            if (targetData.length === 0) {
+                container.innerHTML = `<div style="grid-column:1/-1; padding:48px; text-align:center; border:1px solid var(--neutral-200); background:white; border-radius:var(--radius-xl); color:var(--neutral-500);">No volunteer positions meet your cross-filter requirements.</div>`;
+                return;
+            }
+
+            targetData.forEach(item => {
+                const card = document.createElement("div");
+                card.className = "job-card";
+                card.innerHTML = `
+                    <div class="job-card-header">
+                        <span class="category-tag">${item.category}</span>
+                        <span class="hours-tag">+${item.hours} Hrs</span>
+                    </div>
+                    <div class="job-card-body">
+                        <h3>${item.title}</h3>
+                        <p>${item.description}</p>
+                        <div style="font-size:12px; font-weight:700; color:var(--orange-600);">📍 ${item.location}</div>
+                        <div class="metadata-pill-row">
+                            <span class="meta-badge diff-${item.difficulty.toLowerCase()}">⚡ ${item.difficulty}</span>
+                            <span class="meta-badge time-pill">⏱ ${item.commitment}</span>
+                        </div>
+                    </div>
+                    <div class="job-card-footer">
+                        <button class="btn-card-trigger btn-card-register" onclick="registerOpportunity(${item.id})">
+                            Claim Operation Assignment Slot
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderRegistrations() {
+            const container = document.getElementById("registrationsContainer");
+            container.innerHTML = "";
+            document.getElementById("regCount").innerText = userRegistrations.length;
+
+            if (userRegistrations.length === 0) {
+                container.innerHTML = `<div style="grid-column:1/-1; padding:48px; text-align:center; border:1px solid var(--neutral-200); background:white; border-radius:var(--radius-xl); color:var(--neutral-500);">No active registrations registered onto your personal data ledger.</div>`;
+                return;
+            }
+
+            userRegistrations.forEach(item => {
+                const isPending = item.status === "pending";
+                const card = document.createElement("div");
+                card.className = "job-card";
+                card.innerHTML = `
+                    <div class="job-card-header">
+                        <span class="status-badge-pill ${item.status}">${item.status}</span>
+                        <span class="hours-tag">${item.hours} Hrs</span>
+                    </div>
+                    <div class="job-card-body">
+                        <h3>${item.title}</h3>
+                        <div style="font-size:12px; color: var(--neutral-500); margin-top:8px;"><strong>Location Node:</strong> ${item.location}</div>
+                        <div class="metadata-pill-row">
+                            <span class="meta-badge diff-${item.difficulty.toLowerCase()}">${item.difficulty}</span>
+                            <span class="meta-badge time-pill">${item.commitment}</span>
+                        </div>
+                    </div>
+                    <div class="job-card-footer">
+                        ${isPending ? `
+                            <button class="btn-card-trigger btn-card-complete" onclick="claimJobHours(${item.id})">
+                                Mark Complete & Post Hours Ledger
+                            </button>
+                        ` : `
+                            <button class="btn-card-trigger" style="background:var(--neutral-50); color:var(--neutral-500); cursor:not-allowed;" disabled>
+                                ✓ Balanced Compiled & Audited
+                            </button>
+                        `}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function registerOpportunity(id) {
+            const matchedItem = realBramptonDatabase.find(op => op.id === id);
+            if (matchedItem) {
+                userRegistrations.push({ ...matchedItem, status: "pending" });
+                triggerTelemetryAlert(`Shift slot held: ${matchedItem.title}.`);
+                renderAvailableOpportunities();
+                renderRegistrations();
+                calculateMetricsAndAnalytics();
+            }
+        }
+
+        function claimJobHours(id) {
+            const record = userRegistrations.find(reg => reg.id === id);
+            if (record && record.status === "pending") {
+                record.status = "done";
+                appState.completedHours += record.hours;
+               
+                triggerTelemetryAlert(`Audit balance posted: +${record.hours} hours assigned.`);
+                calculateMetricsAndAnalytics();
+                renderRegistrations();
+            }
+        }
+
+        function calculateMetricsAndAnalytics() {
+            document.getElementById("currentHours").innerText = appState.completedHours;
+            document.getElementById("goalHours").innerText = appState.targetHours;
+
+            const computedPercentage = Math.min(Math.round((appState.completedHours / appState.targetHours) * 100), 100);
+            document.getElementById("progressFill").style.width = `${computedPercentage}%`;
+
+            const activeHoldsCount = userRegistrations.filter(r => r.status === 'pending').length;
+            const finalizedCount = userRegistrations.filter(r => r.status === 'done').length;
+            
+            document.getElementById("analyticsAssigned").innerText = activeHoldsCount;
+            document.getElementById("analyticsRate").innerText = userRegistrations.length > 0 
+                ? `${Math.round((finalizedCount / userRegistrations.length) * 100)}%` 
+                : '0%';
+        }
+
+        function processAccountModifications() {
+            const enteredName = document.getElementById("studentName").value.trim();
+            const enteredHours = parseInt(document.getElementById("targetHours").value, 10);
+
+            if (enteredName) {
+                appState.studentName = enteredName;
+                document.getElementById("navUserBadge").innerText = enteredName;
+            }
+            if (enteredHours > 0) appState.targetHours = enteredHours;
+
+            calculateMetricsAndAnalytics();
+            triggerTelemetryAlert("Account parameters updated.");
+        }
+
+        function triggerTelemetryAlert(messageText) {
+            const alertNode = document.getElementById("reminderAlert");
+            document.getElementById("reminderMessage").innerText = messageText;
+            alertNode.classList.add("show");
+           
+            if (alertTimeout) clearTimeout(alertTimeout);
+            alertTimeout = setTimeout(() => alertNode.classList.remove("show"), 4000);
+        }
+    </script>
+</body>
+</html>
+
